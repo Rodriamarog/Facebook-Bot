@@ -21,6 +21,6 @@ def post_to_facebook_page_sdk(message):
 
 # Example usage
 if __name__ == '__main__':
-    message = "Hello, this is a test post from my bot using the Facebook SDK!"
+    message = "4th test"
     result = post_to_facebook_page_sdk(message)
     print(result)
