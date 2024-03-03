@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+from scrape_wait_times import scrape_wait_times
 import os
 import facebook
 
@@ -21,6 +22,7 @@ def post_to_facebook_page_sdk(message):
 
 # Example usage
 if __name__ == '__main__':
-    message = "4th test"
+    wait_times = scrape_wait_times()
+    message = "\n".join(wait_times)
     result = post_to_facebook_page_sdk(message)
     print(result)
