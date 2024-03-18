@@ -6,7 +6,7 @@ filtered_wait_times_sy = ['SAN YSIDRO:','All Traffic >>']
 
 lanes_otay = ['All Traffic >>', 'Ready Lanes >>', 'Sentri >>']
 count_otay = 0
-filtered_wait_times_otay = ['\n-\n-\nOTAY:','All Traffic >>']
+filtered_wait_times_otay = ['OTAY:','All Traffic >>']
 
 def process_wait_times(wait_times, lanes):
     count = 0
@@ -62,9 +62,10 @@ def scrape_wait_times():
         """)
 
         filtered_wait_times_otay = process_wait_times(otay_wait_times, lanes_otay)
-        filtered_wait_times_otay.insert(0, '\n-\n-\nOTAY:')
+        filtered_wait_times_otay.insert(0, 'OTAY:')
         filtered_wait_times_sy = process_wait_times(sy_wait_times, lanes_sy)
         filtered_wait_times_sy.insert(0, 'SAN YSIDRO:')
+        filtered_wait_times_otay = filtered_wait_times_otay[:-3]
 
         combined_wait_times = [filtered_wait_times_sy,filtered_wait_times_otay]
 
