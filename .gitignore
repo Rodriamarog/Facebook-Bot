@@ -1,3 +1,6 @@
 .env
 *.code-workspace
 fb_bot_venv/
+[internal]
+=
+transferring

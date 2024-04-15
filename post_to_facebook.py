@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+import create_image_with_text
 import os
 import facebook
 
@@ -12,6 +13,7 @@ def post_image_to_facebook_page(image_path):
     graph = facebook.GraphAPI(access_token)
     
     # Post image to Facebook Page
+    create_image_with_text()
     post_id = graph.put_photo(image=open(image_path, 'rb'), album_path=page_id + "/photos")
 
     if post_id:
