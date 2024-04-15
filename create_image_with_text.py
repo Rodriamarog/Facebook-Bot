@@ -4,7 +4,7 @@ import locale
 from datetime import datetime
 
 # Set the locale to Spanish (Mexico)
-locale.setlocale(locale.LC_ALL, 'es_MX.UTF-8')
+#locale.setlocale(locale.LC_ALL, 'es_MX.UTF-8')
 
 def create_image_with_text(text, filename='output.png', image_size=(800, 800), bg_color=(0, 0, 0), text_color=(222, 213, 49), font_size=65, date_font_size=45, date_color=(255, 255, 255)):
     # Create a new blank image

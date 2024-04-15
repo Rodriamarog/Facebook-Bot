@@ -4,41 +4,64 @@ FROM python:3.8-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV LANG es_MX.UTF-8
+ENV LANGUAGE es_MX:es
+ENV LC_ALL es_MX.UTF-8
+ENV TZ=America/Tijuana
 
 # Set the working directory to /app
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y locales procps wget unzip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Set up the locale
-RUN locale-gen es_MX.UTF-8
-
-# Set locale environment variables
-ENV LANG es_MX.UTF-8
-ENV LANGUAGE es_MX:es
-ENV LC_ALL es_MX.UTF-8
+RUN apt-get update && apt-get install -y \
+    locales \
+    procps \
+    wget \
+    unzip \
+    curl \
+    gnupg \
+    libglib2.0-0 \
+    libnss3 \
+    libx11-6 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    --no-install-recommends \
+    && echo "es_MX.UTF-8 UTF-8" > /etc/locale.gen \
+    && locale-gen \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the timezone
-ENV TZ=America/Tijuana
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Upgrade pip
 RUN pip install --upgrade pip
 
-# Install Chrome
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install \
-    && rm google-chrome-stable_current_amd64.deb
+# Install Google Chrome
+RUN wget -q -O /tmp/chrome-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/123.0.6312.122/linux64/chrome-linux64.zip \
+    && unzip /tmp/chrome-linux64.zip -d /opt/chrome \
+    && ls -la /opt/chrome \
+    && rm /tmp/chrome-linux64.zip
+
+# Ensure Google Chrome is installed correctly
+RUN ln -s /opt/chrome/chrome-linux64/chrome /usr/bin/google-chrome
 
 # Install ChromeDriver
-RUN wget https://chromedriver.storage.googleapis.com/2.41/chromedriver_linux64.zip \
-    && unzip chromedriver_linux64.zip \
-    && mv chromedriver /usr/bin/chromedriver \
-    && chown root:root /usr/bin/chromedriver \
-    && chmod +x /usr/bin/chromedriver \
-    && rm chromedriver_linux64.zip
+RUN wget -q -O /tmp/chromedriver-linux64.zip "https://storage.googleapis.com/chrome-for-testing-public/123.0.6312.122/linux64/chromedriver-linux64.zip" \
+    && unzip /tmp/chromedriver-linux64.zip -d /tmp/chromedriver/ \
+    && ls -la /tmp/chromedriver/ \
+    && mv /tmp/chromedriver/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver \
+    && chmod +x /usr/local/bin/chromedriver \
+    && rm -r /tmp/chromedriver/ \
+    && rm /tmp/chromedriver-linux64.zip
+
+
+# Verify ChromeDriver installation
+RUN chromedriver --version
+
+ENV PATH $PATH:/usr/local/bin/chromedriver
 
 # Copy the current directory contents into the container at /app
 COPY . /app
