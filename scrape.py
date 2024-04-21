@@ -3,6 +3,7 @@ import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from dotenv import load_dotenv
 
 # Setup basic logging
@@ -32,11 +33,7 @@ def process_wait_times(wait_times, lanes):
     return filtered_wait_times
 
 def scrape_wait_times():
-    chrome_bin = os.getenv("CHROME_BIN", "/opt/chromium")  # Default path in the Lambda layer
-    chromedriver_bin = os.getenv("CHROMEDRIVER_BIN", "/opt/chromedriver")  # Default path in the Lambda layer
-
     options = Options()
-    options.binary_location = chrome_bin
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -47,7 +44,7 @@ def scrape_wait_times():
     options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
-    service = Service(executable_path=chromedriver_bin)
+    service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
     logger.info("WebDriver initialized")
 
