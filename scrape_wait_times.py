@@ -3,14 +3,10 @@ import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from dotenv import load_dotenv
 
 # Setup basic logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
-
-# Load environment variables from .env file
-load_dotenv()
 
 def process_wait_times(wait_times, lanes):
     count = 0
@@ -32,8 +28,8 @@ def process_wait_times(wait_times, lanes):
     return filtered_wait_times
 
 def scrape_wait_times():
-    chrome_bin = os.getenv("CHROME_BIN", "/opt/chromium")  # Default path in the Lambda layer
-    chromedriver_bin = os.getenv("CHROMEDRIVER_BIN", "/opt/chromedriver")  # Default path in the Lambda layer
+    chrome_bin = os.getenv("CHROME_BIN", "/opt/chromium")  # Adjusted for Lambda environment
+    chromedriver_bin = os.getenv("CHROMEDRIVER_BIN", "/opt/chromedriver")  # Adjusted for Lambda environment
 
     options = Options()
     options.binary_location = chrome_bin
@@ -42,10 +38,6 @@ def scrape_wait_times():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920x1080")
-    options.add_argument("--single-process")
-    options.add_argument("--disable-setuid-sandbox")
-    options.add_experimental_option("useAutomationExtension", False)
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
     service = Service(executable_path=chromedriver_bin)
     driver = webdriver.Chrome(service=service, options=options)
