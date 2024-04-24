@@ -11,6 +11,7 @@ const getExecutablePath = async () => {
   return isLocal ? puppeteer.executablePath() : await chromium.executablePath;
 };
 
+
 const processWaitTimes = (waitTimes: string[], lanes: string[]): string[] => {
     let count = 0;
     const filteredWaitTimes: string[] = [lanes[0]];
