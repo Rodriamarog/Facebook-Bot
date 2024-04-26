@@ -13,6 +13,6 @@
     }
   },
   "include": [
-    "src/**/*"
+    "scrape_lambda.ts"
   ]
 }
