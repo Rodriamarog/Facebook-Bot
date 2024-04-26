@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "esnext",                           // Compile to a later version of ECMAScript
+    "module": "commonjs",                         // CommonJS modules for Node.js compatibility
+    "lib": ["dom", "esnext"],                     // Include DOM and latest ECMAScript features
+    "esModuleInterop": true,                      // Enables ES modules compatibility
+    "moduleResolution": "node",                   // Node.js module resolution mechanism
+    "outDir": "./dist",                           // Output directory for compiled files
+    "strict": true,                               // Enable all strict type-checking options
+    "skipLibCheck": true                          // Skip type checking of all declaration files (*.d.ts)
+  }
+}
