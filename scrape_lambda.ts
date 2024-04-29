@@ -1,17 +1,30 @@
-import * as puppeteer from 'puppeteer-core';
-import chromium from 'chrome-aws-lambda';
+import * as puppeteerCore from 'puppeteer-core'; // Used for typing and lambda execution
+const chromium = require('chrome-aws-lambda'); // CommonJS import for specific functionalities not available as ES6 module
 import { APIGatewayProxyHandler } from 'aws-lambda';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
+import pino from 'pino'; // Correct way to import pino when using ES6 syntax
 
 dotenv.config();
 
-const isLocal = process.env.LOCAL_TEST === 'true';  // Set this env var in your local environment
+// Configure logger
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info'
+});
+logger.info('Logger initialized.');
 
+const isLocal = process.env.LOCAL_TEST === 'true'; // Set this environment variable locally
+
+// Helper function to get executable path
 const getExecutablePath = async () => {
-  return isLocal ? puppeteer.executablePath() : await chromium.executablePath;
+    if (isLocal) {
+        const puppeteer = require('puppeteer');
+        return puppeteer.executablePath();
+    } else {
+        return chromium.executablePath; // Note: not calling it as a function
+    }
 };
 
-
+// Function to process wait times data
 const processWaitTimes = (waitTimes: string[], lanes: string[]): string[] => {
     let count = 0;
     const filteredWaitTimes: string[] = [lanes[0]];
@@ -22,8 +35,7 @@ const processWaitTimes = (waitTimes: string[], lanes: string[]): string[] => {
         if (waitTime.includes('No Delay')) {
             filteredWaitTimes.push(waitTime);
         } else if (waitTime.includes('Status')) {
-            const adjustedTime = 'Vehicles: 0.05';
-            filteredWaitTimes.push(adjustedTime);
+            filteredWaitTimes.push('Vehicles: 0.05');
         } else {
             filteredWaitTimes.push(waitTime);
         }
@@ -35,51 +47,81 @@ const processWaitTimes = (waitTimes: string[], lanes: string[]): string[] => {
     return filteredWaitTimes;
 };
 
+// Main function to scrape wait times
 const scrapeWaitTimes = async (): Promise<string[][]> => {
-    const browser = await puppeteer.launch({
-        executablePath: await getExecutablePath(), // Use the function to dynamically set the path
-        args: chromium.args,
-        headless: true,
-        defaultViewport: { width: 1920, height: 1080 }
-    });
+    const puppeteer = isLocal ? require('puppeteer') : puppeteerCore;
+    let browser: any;
 
-    const page = await browser.newPage();
-    await page.goto("https://www.smartbordercoalition.com/border-wait-times");
-    await page.waitForSelector("div.ticker__item:nth-of-type(2) span", { timeout: 10000 });
+    try {
+        browser = await puppeteer.launch({
+            executablePath: await getExecutablePath(),
+            args: [...chromium.args, '--enable-logging', '--v=1'],
+            headless: true,
+            defaultViewport: { width: 1920, height: 1080 },
+            timeout: 90000 // Adjust timeout settings as needed
+        });
+        logger.info('Browser launched successfully');
 
-    const lanes_sy = ['SAN YSIDRO:', 'All Traffic >>', 'Ready Lanes >>', 'Sentri >>'];
-    const lanes_otay = ['OTAY:', 'All Traffic >>', 'Ready Lanes >>', 'Sentri >>'];
+        const page = await browser.newPage();
+        await page.goto("https://www.smartbordercoalition.com/border-wait-times", {
+            waitUntil: 'networkidle0',
+            timeout: 90000 // Adjust timeout settings as needed
+        });
+        logger.info('Page loaded successfully');
 
-    const syWaitTimes = await page.evaluate(() =>
-        Array.from(document.querySelectorAll("div.ticker__item:nth-of-type(2) span")).map(span => (span as HTMLElement).innerText)
-    );
-    
-    const otayWaitTimes = await page.evaluate(() =>
-        Array.from(document.querySelectorAll("div.ticker__item:nth-of-type(3) span")).map(span => (span as HTMLElement).innerText)
-    );
+        await page.waitForSelector("div.ticker__item:nth-of-type(2) span", { timeout: 45000 });
+        logger.info('Selector found');
 
-    const filteredWaitTimesSY = processWaitTimes(syWaitTimes, lanes_sy);
-    const filteredWaitTimesOtay = processWaitTimes(otayWaitTimes, lanes_otay);
+        const lanes_sy = ['SAN YSIDRO:', 'All Traffic >>', 'Ready Lanes >>', 'Sentri >>'];
+        const lanes_otay = ['OTAY:', 'All Traffic >>', 'Ready Lanes >>', 'Sentri >>'];
 
-    await browser.close();
+        const syWaitTimes = await page.evaluate(() =>
+            Array.from(document.querySelectorAll("div.ticker__item:nth-of-type(2) span")).map(span => (span as HTMLElement).innerText)
+        );
 
-    return [filteredWaitTimesSY, filteredWaitTimesOtay];
+        const otayWaitTimes = await page.evaluate(() =>
+            Array.from(document.querySelectorAll("div.ticker__item:nth-of-type(3) span")).map(span => (span as HTMLElement).innerText)
+        );
+
+        const filteredWaitTimesSY = processWaitTimes(syWaitTimes, lanes_sy);
+        const filteredWaitTimesOtay = processWaitTimes(otayWaitTimes, lanes_otay);
+
+        await browser.close();
+        logger.info('Browser closed');
+
+        return [filteredWaitTimesSY, filteredWaitTimesOtay]; // Ensure return value on success
+    } catch (error) {
+        logger.error('Failed to execute scraping:', error);
+        if (browser) await browser.close();
+        throw error; // Rethrow after cleanup to handle the error further up the call stack
+    }
 };
 
 export const handler: APIGatewayProxyHandler = async (event, context) => {
-    console.log("Handler started");
-    try {
-        const results = await scrapeWaitTimes();
-        console.log("Data processed successfully");
-        return {
-            statusCode: 200,
-            body: JSON.stringify(results)
-        };
-    } catch (e) {
-        console.error("An error occurred:", e);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: "Failed to process data" })
-        };
-    }
+  logger.info("Handler started");
+  try {
+    const results = await scrapeWaitTimes();
+    logger.info("Data processed successfully");
+    return {
+      statusCode: 200,
+      body: JSON.stringify(results)
+    };
+  } catch (e) {
+    logger.error("An error occurred:", e);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Failed to process data" })
+    };
+  }
 };
+
+if (require.main === module) {
+  (async () => {
+    try {
+      const results = await scrapeWaitTimes();
+      console.log(results);
+    } catch (e) {
+      console.error("An error occurred:", e);
+    }
+  })();
+}

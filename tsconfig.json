@@ -1,18 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es6", 
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "strict": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "paths": {
-      "*": [
-        "node_modules/*"
-      ]
-    }
+      "target": "ES2018",
+      "module": "CommonJS",
+      "esModuleInterop": true,
+      "outDir": "./dist",
+      "baseUrl": ".",
+      "strict": true,
+      "moduleResolution": "node"
   },
   "include": [
-    "scrape_lambda.ts"
+      "simpleScrape.ts"
   ]
 }

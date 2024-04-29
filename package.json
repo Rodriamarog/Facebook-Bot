@@ -20,9 +20,11 @@
   "dependencies": {
     "chrome-aws-lambda": "^10.1.0",
     "dotenv": "^16.4.5",
-    "puppeteer-core": "^10.1.0"
+    "pino": "^9.0.0",
+    "puppeteer-core": "^10.4.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.137"
+    "@types/aws-lambda": "^8.10.137",
+    "puppeteer": "^22.7.1"
   }
 }

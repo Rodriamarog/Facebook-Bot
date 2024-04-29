@@ -37,25 +37,23 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
-var puppeteer = require("puppeteer-core");
+var puppeteerCore = require("puppeteer-core"); // Changed to 'puppeteerCore' to avoid naming collision
 var chrome_aws_lambda_1 = require("chrome-aws-lambda");
 var dotenv = require("dotenv");
 dotenv.config();
 var isLocal = process.env.LOCAL_TEST === 'true'; // Set this env var in your local environment
 var getExecutablePath = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var _a;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0:
-                if (!isLocal) return [3 /*break*/, 1];
-                _a = puppeteer.executablePath();
-                return [3 /*break*/, 3];
-            case 1: return [4 /*yield*/, chrome_aws_lambda_1.default.executablePath];
-            case 2:
-                _a = _b.sent();
-                _b.label = 3;
-            case 3: return [2 /*return*/, _a];
+    var puppeteer;
+    return __generator(this, function (_a) {
+        if (isLocal) {
+            puppeteer = require('puppeteer');
+            return [2 /*return*/, puppeteer.executablePath()];
         }
+        else {
+            // Chromium's executable path for Lambda environment
+            return [2 /*return*/, chrome_aws_lambda_1.default.executablePath]; // Note: not calling it as a function
+        }
+        return [2 /*return*/];
     });
 }); };
 var processWaitTimes = function (waitTimes, lanes) {
@@ -84,11 +82,12 @@ var processWaitTimes = function (waitTimes, lanes) {
     return filteredWaitTimes;
 };
 var scrapeWaitTimes = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var browser, _a, _b, page, lanes_sy, lanes_otay, syWaitTimes, otayWaitTimes, filteredWaitTimesSY, filteredWaitTimesOtay;
+    var puppeteer, browser, _a, _b, page, lanes_sy, lanes_otay, syWaitTimes, otayWaitTimes, filteredWaitTimesSY, filteredWaitTimesOtay;
     var _c;
     return __generator(this, function (_d) {
         switch (_d.label) {
             case 0:
+                puppeteer = isLocal ? require('puppeteer') : puppeteerCore;
                 _b = (_a = puppeteer).launch;
                 _c = {};
                 return [4 /*yield*/, getExecutablePath()];
@@ -158,3 +157,24 @@ var handler = function (event, context) { return __awaiter(void 0, void 0, void 
     });
 }); };
 exports.handler = handler;
+if (require.main === module) {
+    (function () { return __awaiter(void 0, void 0, void 0, function () {
+        var results, e_2;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, scrapeWaitTimes()];
+                case 1:
+                    results = _a.sent();
+                    console.log(results);
+                    return [3 /*break*/, 3];
+                case 2:
+                    e_2 = _a.sent();
+                    console.error("An error occurred:", e_2);
+                    return [3 /*break*/, 3];
+                case 3: return [2 /*return*/];
+            }
+        });
+    }); })();
+}
