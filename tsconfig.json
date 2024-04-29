@@ -9,6 +9,7 @@
       "moduleResolution": "node"
   },
   "include": [
-      "simpleScrape.ts"
+      "simpleScrape.ts",
+      "scrape_lambda.ts",
   ]
 }
