@@ -4,7 +4,7 @@ const puppeteer = chromium.puppeteer;
 exports.handler = async (event) => {
   let browser = null;
   try {
-    // Setup Puppeteer to use the bundled Chromium from chrome-aws-lambda
+    console.log('Launching headless browser...');
     browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
@@ -12,12 +12,13 @@ exports.handler = async (event) => {
       headless: chromium.headless,
     });
 
+    console.log('Opening new page...');
     const page = await browser.newPage();
+    console.log('Navigating to https://example.com...');
     await page.goto('https://example.com');
     const title = await page.title();
     console.log(`Title of the page: ${title}`);
 
-    // Return a response from the Lambda function
     return {
       statusCode: 200,
       body: JSON.stringify({
@@ -35,8 +36,8 @@ exports.handler = async (event) => {
       }),
     };
   } finally {
-    // Ensure the browser is closed when the function execution is complete.
     if (browser !== null) {
+      console.log('Closing browser...');
       await browser.close();
     }
   }
