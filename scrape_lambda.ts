@@ -11,8 +11,8 @@ const logger = pino({
 logger.info('Logger initialized.');
 
 const processWaitTimes = (waitTimes: string[], lanes: string[]): string[] => {
-    let count = 0;
-    const filteredWaitTimes: string[] = [lanes[0]];
+    let count = 1;
+    const filteredWaitTimes: string[] = [lanes[0], lanes[1]];
     for (const waitTime of waitTimes) {
         if (waitTime.endsWith(":") || waitTime.startsWith("N")) {
             continue;
@@ -65,7 +65,8 @@ const scrapeWaitTimes = async (): Promise<string[][]> => {
 
         const filteredWaitTimesSY = processWaitTimes(syWaitTimes, lanes_sy);
         const filteredWaitTimesOtay = processWaitTimes(otayWaitTimes, lanes_otay);
-
+        filteredWaitTimesOtay.pop();
+        
         await browser.close();
         logger.info('Browser closed');
 

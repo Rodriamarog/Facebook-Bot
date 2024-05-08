@@ -36,8 +36,8 @@ const logger = (0, pino_1.default)({
 });
 logger.info('Logger initialized.');
 const processWaitTimes = (waitTimes, lanes) => {
-    let count = 0;
-    const filteredWaitTimes = [lanes[0]];
+    let count = 1;
+    const filteredWaitTimes = [lanes[0], lanes[1]];
     for (const waitTime of waitTimes) {
         if (waitTime.endsWith(":") || waitTime.startsWith("N")) {
             continue;
@@ -80,6 +80,7 @@ const scrapeWaitTimes = async () => {
         const otayWaitTimes = await page.evaluate(() => Array.from(document.querySelectorAll("div.ticker__item:nth-of-type(3) span")).map(span => span.innerText));
         const filteredWaitTimesSY = processWaitTimes(syWaitTimes, lanes_sy);
         const filteredWaitTimesOtay = processWaitTimes(otayWaitTimes, lanes_otay);
+        filteredWaitTimesOtay.pop();
         await browser.close();
         logger.info('Browser closed');
         return [filteredWaitTimesSY, filteredWaitTimesOtay];
