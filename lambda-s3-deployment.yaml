@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy Lambda Function with Puppeteer and chrome-aws-lambda
+
+Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: LambdaBasicExecution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: 'arn:aws:logs:*:*:*'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: 'arn:aws:s3:::*/*'
+
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref MyS3Bucket
+        S3Key: function.zip
+      Runtime: nodejs14.x
+      MemorySize: 2048
+      Timeout: 30
+      Layers:
+        - !Sub 'arn:aws:lambda:${AWS::Region}:764866452798:layer:chrome-aws-lambda:25'  # Update the layer version as necessary
+      Environment:
+        Variables:
+          NODE_PATH: "/opt/nodejs/node14/node_modules:/opt/nodejs/node_modules:/var/runtime/node_modules:/var/runtime:/var/task"
+
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+
+Outputs:
+  LambdaFunctionARN:
+    Description: "The ARN of the Lambda function"
+    Value: !GetAtt MyLambdaFunction.Arn
+
+  LambdaFunctionName:
+    Description: "The name of the Lambda function"
+    Value: !Ref MyLambdaFunction
+
+  S3BucketName:
+    Description: "The name of the S3 Bucket"
+    Value: !Ref MyS3Bucket
