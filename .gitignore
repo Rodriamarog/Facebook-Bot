@@ -10,3 +10,16 @@ __pycache__/create_image_with_text.cpython-311.pyc
 node_modules/
 launch.json
 quicksort.py 
+package-lock.json
+package.json
+ToTrash
+node_modules/
+dist/
+chrome-aws-lambda/
+chromedriver-linux64/
+awscli-venv/
+.vscode/
+chrome-aws-lambda 
+chromedriver-linux64
+awscli-venv
+dist
