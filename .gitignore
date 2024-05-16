@@ -25,3 +25,5 @@ awscli-venv
 dist
 chrome-aws-lambda/
 chrome-aws-lambda
+access_keys.txt 
+
