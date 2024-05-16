@@ -23,3 +23,5 @@ chrome-aws-lambda
 chromedriver-linux64
 awscli-venv
 dist
+chrome-aws-lambda/
+chrome-aws-lambda
