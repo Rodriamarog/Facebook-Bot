@@ -1,0 +1,38 @@
+iam role arn: "arn:aws:iam::767397665901:role/lambda-execution-role",
+
+layer arn: "arn:aws:lambda:us-west-2:767397665901:layer:chrome-aws-lambda-layer:1",
+
+
+Create fucntion:
+aws lambda create-function \
+  --function-name test-chromium \
+  --runtime nodejs16.x \
+  --role arn:aws:iam::767397665901:role/lambda-execution-role \
+  --handler index.handler \
+  --zip-file fileb://function.zip
+
+Attach lambda layer:
+aws lambda update-function-configuration \
+  --function-name test-chromium \
+  --layers arn:aws:lambda:us-west-2:767397665901:layer:chrome-aws-lambda-layer:1
+
+Invoke the function:
+aws lambda invoke \
+  --function-name test-chromium \
+  --payload file://payload.json \
+  output.txt
+
+
+aws lambda update-function-configuration \
+  --function-name test-chromium \
+  --layers arn:aws:lambda:us-west-2:123456789012:layer:chrome-aws-lambda-layer:1
+
+
+
+
+
+UPDATE:
+Have to deploy Lambda Layer correctly, it must include chrome-aws-lambda and puppeteer-core. Recreate the lambda layer.
+
+Make chatgpt use the correct directories and files you're using.
+

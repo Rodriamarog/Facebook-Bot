@@ -1,0 +1,6 @@
+Let's create an s3 bucket called:
+aws s3 mb s3://fbbot-scraper-bucket-1997
+
+The path to the function.zip is the following:
+/home/rodrigo/Projects/vsc/fbbot/function.zip
+
