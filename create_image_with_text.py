@@ -42,13 +42,14 @@ def create_image_with_text(text, filename='output.png', image_size=(800, 800), b
     # Start drawing from top, leaving space for the date at the bottom
     current_y = (image_size[1] - total_height - date_font_size - 60) / 2  # 60px extra padding
 
-    # Draw title (centered)
-    title_width = d.textbbox((0, 0), title, font=title_font)[2]
-    d.text(((image_size[0] - title_width) / 2, current_y), title, fill=title_color, font=title_font)
+    # Left margin for all text
+    left_margin = 50  # Adjust this value to change the left margin
+
+    # Draw title (left-aligned)
+    d.text((left_margin, current_y), title, fill=title_color, font=title_font)
     current_y += title_height + 20  # 20px spacing after title
 
     # Draw content groups (left-aligned)
-    left_margin = 50  # Adjust this value to change the left margin
     for group in groups:
         for line in group:
             d.text((left_margin, current_y), line, fill=text_color, font=main_font)
