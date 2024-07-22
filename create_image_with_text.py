@@ -1,62 +1,85 @@
 from PIL import Image, ImageDraw, ImageFont
-from scrape_wait_times import scrape_wait_times
-import locale
 from datetime import datetime
 
-# Set the locale to Spanish (Mexico)
-#locale.setlocale(locale.LC_ALL, 'es_MX.UTF-8')
-
-def create_image_with_text(text, filename='output.png', image_size=(800, 800), bg_color=(0, 0, 0), text_color=(222, 213, 49), font_size=65, date_font_size=45, date_color=(255, 255, 255)):
+def create_image_with_text(text, filename='output.png', image_size=(800, 800), bg_color=(0, 0, 0), text_color=(222, 213, 49), title_color=(255, 255, 0), font_size=60, title_font_size=70, date_font_size=45, date_color=(255, 255, 255)):
     # Create a new blank image
     img = Image.new('RGB', image_size, color=bg_color)
-    
-    # Get a drawing context
     d = ImageDraw.Draw(img)
 
-    # Define the main font
+    # Define fonts
     try:
         main_font = ImageFont.truetype("Jersey15-Regular.ttf", font_size)
-    except IOError:
-        print("Main font not found, using default font.")
-        main_font = ImageFont.load_default()
-
-    # Define the date font
-    try:
+        title_font = ImageFont.truetype("Jersey15-Regular.ttf", title_font_size)
         date_font = ImageFont.truetype("Jersey15-Regular.ttf", date_font_size)
     except IOError:
-        print("Date font not found, using default font.")
-        date_font = ImageFont.load_default()
-    
-    # Add the main text to the image
-    # Calculate the bounding box of the text
+        print("Font not found, using default font.")
+        main_font = ImageFont.load_default()
+        title_font = main_font
+        date_font = main_font
+
+    # Split text into lines
     lines = text.split('\n')
-    total_text_height = sum([d.textbbox((0, 0), line, font=main_font)[3] for line in lines]) + (len(lines) - 1) * 10
-    current_h = (image_size[1] - total_text_height) / 2 - date_font_size * 2  # leave space for the date
-    for line in lines:
-        text_width, text_height = d.textbbox((0, 0), line, font=main_font)[2:4]
-        x = (image_size[0] - text_width) / 2
-        d.text((x, current_h), line, fill=text_color, font=main_font)
-        current_h += text_height + 10
+
+    # Separate title and content
+    title = lines[0].split(':')[0] + ':'
+    content_lines = lines[1:]
+
+    # Group content lines into sections
+    sections = []
+    current_section = []
+    for line in content_lines:
+        if '>>' in line:
+            if current_section:
+                sections.append(current_section)
+                current_section = []
+        current_section.append(line)
+    if current_section:
+        sections.append(current_section)
+
+    # Calculate total height
+    title_height = d.textbbox((0, 0), title, font=title_font)[3]
+    section_heights = [sum([d.textbbox((0, 0), line, font=main_font)[3] for line in section]) for section in sections]
+    total_content_height = sum(section_heights) + (len(sections) - 1) * 40  # 40px spacing between sections
     
+    # Start drawing from top, leaving space for the date at the bottom
+    current_y = (image_size[1] - total_content_height - title_height - date_font_size - 60) / 2  # 60px extra padding
+
+    # Draw title
+    title_width = d.textbbox((0, 0), title, font=title_font)[2]
+    d.text(((image_size[0] - title_width) / 2, current_y), title, fill=title_color, font=title_font)
+    current_y += title_height + 40  # 40px spacing after title
+
+    # Draw content sections
+    for section in sections:
+        for line in section:
+            line_width = d.textbbox((0, 0), line, font=main_font)[2]
+            d.text(((image_size[0] - line_width) / 2, current_y), line, fill=text_color, font=main_font)
+            current_y += d.textbbox((0, 0), line, font=main_font)[3] + 10  # 10px line spacing
+        current_y += 30  # 30px extra spacing between sections
+
     # Add the date and time at the bottom
     now = datetime.now()
     date_time_text = now.strftime('%d de %B de %Y - %H:%M')
-    date_text_width, date_text_height = d.textbbox((0, 0), date_time_text, font=date_font)[2:4]
+    date_text_width = d.textbbox((0, 0), date_time_text, font=date_font)[2]
     date_x = (image_size[0] - date_text_width) / 2
-    date_y = image_size[1] - date_text_height - 10  # 10 pixels from the bottom
+    date_y = image_size[1] - date_font_size - 10  # 10 pixels from the bottom
     d.text((date_x, date_y), date_time_text, fill=date_color, font=date_font)
-    
+
     # Save the image
     img.save(filename)
     print(f"Image saved as {filename}")
 
 # Example usage
 if __name__ == '__main__':
-    wait_times = scrape_wait_times()
-    count = 1
-    for wait_time in wait_times:
-        text_to_print = '\n'.join(wait_time)
-        create_image_with_text(text_to_print, f'wait_times{count}.png')
-        count += 1
-    
-    print('Images created successfully!')
+    sample_text = """SAN YSIDRO:
+All Traffic >>
+Vehicles: 1:40
+Pedestrians: 0:10
+Ready Lanes >>
+Vehicles: 1:00
+Pedestrians: No Delay
+Sentri >>
+Vehicles: 0:10"""
+
+    create_image_with_text(sample_text, 'improved_wait_times.png')
+    print('Image created successfully!')
