@@ -56,7 +56,7 @@ def scrape_wait_times():
 
         filtered_wait_times_sy = process_wait_times(sy_wait_times, lanes_sy)
         filtered_wait_times_otay = process_wait_times(otay_wait_times, lanes_otay)
-        combined_wait_times = [filtered_wait_times_sy, filtered_wait_times_otay[:-4]]
+        combined_wait_times = [filtered_wait_times_sy, filtered_wait_times_otay[:-2]]
         
         logger.info("Data processed successfully")
         return combined_wait_times

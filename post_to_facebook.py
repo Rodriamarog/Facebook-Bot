@@ -43,9 +43,16 @@ def post_to_facebook_page(image_path, wait_time_data):
 
     if post_id:
         print(f"Successfully posted image for {crossing_point} to Facebook Page.")
+        # Delete the image file after successful posting
+        try:
+            os.remove(image_path)
+            print(f"Successfully deleted {image_path}")
+        except OSError as e:
+            print(f"Error deleting {image_path}: {e}")
         return post_id
     else:
         print(f"Failed to post image for {crossing_point} to Facebook Page.")
+        return None
 
 # Main execution
 if __name__ == '__main__':
@@ -56,5 +63,18 @@ if __name__ == '__main__':
         image_path = f'wait_times{count}.png'
         create_image_with_text(text_to_print, image_path)
         result = post_to_facebook_page(image_path, wait_time)
-        print(result)
+        if result:
+            print(f"Posted to Facebook with ID: {result}")
+        else:
+            print("Failed to post to Facebook")
         count += 1
+
+    # Check for any leftover image files and delete them
+    for i in range(1, count):
+        leftover_image = f'wait_times{i}.png'
+        if os.path.exists(leftover_image):
+            try:
+                os.remove(leftover_image)
+                print(f"Deleted leftover file: {leftover_image}")
+            except OSError as e:
+                print(f"Error deleting leftover file {leftover_image}: {e}")
