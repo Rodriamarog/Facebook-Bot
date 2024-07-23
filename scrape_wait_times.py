@@ -1,6 +1,6 @@
-import asyncio
+import requests
+from bs4 import BeautifulSoup
 import logging
-from pyppeteer import launch
 
 # Setup basic logging
 logging.basicConfig(level=logging.INFO)
@@ -25,50 +25,35 @@ def process_wait_times(wait_times, lanes):
                 filtered_wait_times.append("\n" + lanes[count])
     return filtered_wait_times
 
-async def scrape_wait_times():
-    browser = await launch(
-        headless=True,
-        args=[
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--single-process',
-        ]
-    )
-    page = await browser.newPage()
-    logger.info("Browser initialized")
-
+def scrape_wait_times():
+    url = "https://www.smartbordercoalition.com/border-wait-times"
     lanes_sy = ['SAN YSIDRO:', 'All Traffic >>', 'Ready Lanes >>', 'Sentri >>']
     lanes_otay = ['OTAY:', 'All Traffic >>', 'Ready Lanes >>', 'Sentri >>']
 
     try:
-        await page.goto("https://www.smartbordercoalition.com/border-wait-times")
-        await page.waitForSelector("div.ticker__item")
-        logger.info("Page loaded successfully")
-
-        sy_wait_times = await page.evaluate("""
-        () => Array.from(document.querySelectorAll("div.ticker__item:nth-of-type(2) span")).map(span => span.innerText)
-        """)
+        response = requests.get(url)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        otay_wait_times = await page.evaluate("""
-        () => Array.from(document.querySelectorAll("div.ticker__item:nth-of-type(3) span")).map(span => span.innerText)
-        """)
+        sy_wait_times = soup.select("div.ticker__item:nth-of-type(2) span")
+        sy_wait_times = [span.text for span in sy_wait_times]
+        
+        otay_wait_times = soup.select("div.ticker__item:nth-of-type(3) span")
+        otay_wait_times = [span.text for span in otay_wait_times]
 
         filtered_wait_times_sy = process_wait_times(sy_wait_times, lanes_sy)
         filtered_wait_times_otay = process_wait_times(otay_wait_times, lanes_otay)
         combined_wait_times = [filtered_wait_times_sy, filtered_wait_times_otay[:-2]]
+        
         logger.info("Data processed successfully")
-
         return combined_wait_times
+
     except Exception as e:
         logger.error(f'An error occurred: {e}', exc_info=True)
         return None
-    finally:
-        await browser.close()
-        logger.info("Browser session closed")
 
 def get_wait_times():
-    return asyncio.get_event_loop().run_until_complete(scrape_wait_times())
+    return scrape_wait_times()
 
 if __name__ == "__main__":
     result = get_wait_times()
