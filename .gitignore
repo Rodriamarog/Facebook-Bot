@@ -11,3 +11,5 @@ node_modules/
 package*
 package/
 deployment_package.zip
+env/
+deployment_package/

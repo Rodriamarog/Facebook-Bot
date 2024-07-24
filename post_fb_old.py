@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from create_image_with_text import create_image_with_text
 from scrape_wait_times import scrape_wait_times
 import os
@@ -5,6 +6,7 @@ import facebook
 from datetime import datetime
 
 # Load environment variables from .env file
+load_dotenv()
 
 def post_to_facebook_page(image_path, wait_time_data):
     # Access variables
