@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from scrape_wait_times import get_wait_times  # Changed this import
 from create_image_with_text import create_image_with_text
 from post_to_facebook import post_to_facebook_page
@@ -9,6 +10,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def run_bot():
+    # Load environment variables
+    load_dotenv()
     
     # Scrape wait times
     wait_times = get_wait_times()  # Changed this function call

@@ -10,8 +10,8 @@ load_dotenv()
 
 def post_to_facebook_page(image_path, wait_time_data):
     # Access variables
-    access_token = os.getenv('ACCESS_TOKEN')
-    page_id = os.getenv('PAGE_ID')
+    access_token = os.environ.get('ACCESS_TOKEN')
+    page_id = os.environ.get('PAGE_ID')
     graph = facebook.GraphAPI(access_token)
 
     # Determine the border crossing point from the image filename
