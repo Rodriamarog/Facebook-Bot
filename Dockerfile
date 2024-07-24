@@ -5,6 +5,7 @@ COPY lambda_function.py ${LAMBDA_TASK_ROOT}
 COPY scrape_wait_times.py ${LAMBDA_TASK_ROOT}
 COPY create_image_with_text.py ${LAMBDA_TASK_ROOT}
 COPY post_to_facebook.py ${LAMBDA_TASK_ROOT}
+COPY Jersey15-Regular.ttf ${LAMBDA_TASK_ROOT}/
 
 # Install the function's dependencies
 COPY requirements.txt .

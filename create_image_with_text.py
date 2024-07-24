@@ -8,9 +8,9 @@ def create_image_with_text(text, filename='output.png', image_size=(800, 800), b
 
     # Define fonts
     try:
-        main_font = ImageFont.truetype("Jersey15-Regular.ttf", font_size)
-        title_font = ImageFont.truetype("Jersey15-Regular.ttf", title_font_size)
-        date_font = ImageFont.truetype("Jersey15-Regular.ttf", date_font_size)
+        main_font = ImageFont.truetype("/var/task/Jersey15-Regular.ttf", font_size)
+        title_font = ImageFont.truetype("/var/task/Jersey15-Regular.ttf", title_font_size)
+        date_font = ImageFont.truetype("/var/task/Jersey15-Regular.ttf", date_font_size)
     except IOError:
         print("Font not found, using default font.")
         main_font = ImageFont.load_default()
