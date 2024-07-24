@@ -1,29 +1,27 @@
 import requests
 from bs4 import BeautifulSoup
 import logging
+import re
 
-# Setup basic logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def clean_text(text):
+    return re.sub(r'\s+', ' ', text).strip()
+
 def process_wait_times(wait_times, lanes):
-    count = 1
-    filtered_wait_times = [lanes[0], lanes[1]]  # Starts with "SAN YSIDRO:" or "OTAY:"
-    for wait_time in wait_times:
-        if wait_time[-1] == ":" or wait_time[0] == "N":
-            continue
-        else:
-            if 'No Delay' in wait_time:
-                filtered_wait_times.append(wait_time)
-            elif 'Status' in wait_time:
-                wait_time = 'Vehicles: 0.05'
-                filtered_wait_times.append(wait_time)
-            else:
-                filtered_wait_times.append(wait_time)
-            if 'Pedestrians' in wait_time and count < len(lanes) - 1:
-                count += 1
-                filtered_wait_times.append("\n" + lanes[count])
-    return filtered_wait_times
+    # Filter the list to keep only the entries we want
+    filtered_times = [time for time in wait_times if time.startswith(('Vehicles:', 'Pedestrians:')) and not time.endswith(':')]
+    
+    result = [lanes[0]]
+    for i, lane in enumerate(lanes[1:], 1):
+        result.append(f"\n{lane}")
+        if 2*i-2 < len(filtered_times):
+            result.append(filtered_times[2*i-2])  # Vehicle time
+        if 2*i-1 < len(filtered_times):
+            result.append(filtered_times[2*i-1])  # Pedestrian time
+    
+    return result
 
 def scrape_wait_times():
     url = "https://www.smartbordercoalition.com/border-wait-times"
@@ -36,16 +34,20 @@ def scrape_wait_times():
         soup = BeautifulSoup(response.text, 'html.parser')
         
         sy_wait_times = soup.select("div.ticker__item:nth-of-type(2) span")
-        sy_wait_times = [span.text for span in sy_wait_times]
+        sy_wait_times = [clean_text(span.text) for span in sy_wait_times if clean_text(span.text)]
         
         otay_wait_times = soup.select("div.ticker__item:nth-of-type(3) span")
-        otay_wait_times = [span.text for span in otay_wait_times]
+        otay_wait_times = [clean_text(span.text) for span in otay_wait_times if clean_text(span.text)]
+
+        logger.info(f"Raw SY wait times: {sy_wait_times}")
+        logger.info(f"Raw OTAY wait times: {otay_wait_times}")
 
         filtered_wait_times_sy = process_wait_times(sy_wait_times, lanes_sy)
         filtered_wait_times_otay = process_wait_times(otay_wait_times, lanes_otay)
-        combined_wait_times = [filtered_wait_times_sy, filtered_wait_times_otay[:-2]]
+        combined_wait_times = [filtered_wait_times_sy, filtered_wait_times_otay]
         
         logger.info("Data processed successfully")
+        logger.info(f"Processed data: {combined_wait_times}")
         return combined_wait_times
 
     except Exception as e:
