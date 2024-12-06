@@ -1,86 +1,147 @@
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import os
+import requests
 
-def create_image_with_text(text, filename='output.png', image_size=(800, 800), bg_color=(0, 0, 0), text_color=(222, 213, 49), title_color=(255, 255, 0), font_size=60, title_font_size=70, date_font_size=45, date_color=(255, 255, 255)):
-    # Create a new blank image
-    img = Image.new('RGB', image_size, color=bg_color)
-    d = ImageDraw.Draw(img)
+def download_font():
+    """Download Inter font if not present"""
+    font_path = os.path.join(os.path.dirname(__file__), 'Inter-Regular.ttf')
+    font_bold_path = os.path.join(os.path.dirname(__file__), 'Inter-Bold.ttf')
+    
+    if not os.path.exists(font_path):
+        url = "https://github.com/rsms/inter/raw/master/docs/font-files/Inter-Regular.ttf"
+        response = requests.get(url)
+        with open(font_path, 'wb') as f:
+            f.write(response.content)
+            
+    if not os.path.exists(font_bold_path):
+        url = "https://github.com/rsms/inter/raw/master/docs/font-files/Inter-Bold.ttf"
+        response = requests.get(url)
+        with open(font_bold_path, 'wb') as f:
+            f.write(response.content)
+            
+    return font_path, font_bold_path
 
-    # Define fonts
-    font_path = os.path.join(os.path.dirname(__file__), 'Jersey15-Regular.ttf')
-    try:
-        main_font = ImageFont.truetype(font_path, font_size)
-        title_font = ImageFont.truetype(font_path, title_font_size)
-        date_font = ImageFont.truetype(font_path, date_font_size)
-    except IOError:
-        print("Font not found, using default font.")
-        main_font = ImageFont.load_default()
-        title_font = main_font
-        date_font = main_font
+def create_border_image(wait_times, border_type, filename=None):
+    """Create image for either San Ysidro or Otay"""
+    if filename is None:
+        filename = f'{border_type.lower().replace(" ", "_")}_wait_times.png'
+        
+    # Modern color scheme
+    COLORS = {
+        'background': (23, 23, 23),    # Dark background
+        'title': (255, 255, 255),      # White
+        'category': (0, 122, 255),     # Bright blue
+        'text': (255, 255, 255),       # White
+        'long_wait': (255, 69, 58),    # Red for long waits
+        'date': (179, 179, 179)        # Light gray
+    }
+    
+    # Image settings - more compact
+    IMAGE_SIZE = (800, 600)  # Reduced size
+    PADDING = 40
+    LINE_HEIGHT = 50  # Reduced line height
+    
+    # Get fonts
+    regular_font_path, bold_font_path = download_font()
+    
+    # Create fonts - adjusted sizes
+    title_font = ImageFont.truetype(bold_font_path, 56)
+    category_font = ImageFont.truetype(bold_font_path, 48)
+    main_font = ImageFont.truetype(regular_font_path, 42)
+    time_font = ImageFont.truetype(bold_font_path, 42)
+    date_font = ImageFont.truetype(regular_font_path, 32)
+    
+    # Create image
+    img = Image.new('RGB', IMAGE_SIZE, COLORS['background'])
+    draw = ImageDraw.Draw(img)
+    
+    # Current Y position
+    current_y = PADDING
 
-    # Split text into lines
-    lines = text.split('\n')
-    title = lines[0]
-    content_lines = lines[1:]
-
-    # Group content lines
-    groups = []
-    current_group = []
-    for line in content_lines:
-        if '>>' in line and current_group:
-            groups.append(current_group)
-            current_group = []
-        current_group.append(line)
-    if current_group:
-        groups.append(current_group)
-
-    # Calculate total height
-    title_height = d.textbbox((0, 0), title, font=title_font)[3]
-    group_heights = [sum([d.textbbox((0, 0), line, font=main_font)[3] for line in group]) for group in groups]
-    total_content_height = sum(group_heights) + (len(groups) - 1) * 40  # 40px spacing between groups
-    total_height = title_height + total_content_height + 20  # 20px spacing after title
-
-    # Start drawing from top, leaving space for the date at the bottom
-    current_y = (image_size[1] - total_height - date_font_size - 60) / 2  # 60px extra padding
-
-    # Left margin for all text
-    left_margin = 50  # Adjust this value to change the left margin
-
-    # Draw title (left-aligned)
-    d.text((left_margin, current_y), title, fill=title_color, font=title_font)
-    current_y += title_height + 20  # 20px spacing after title
-
-    # Draw content groups (left-aligned)
-    for group in groups:
-        for line in group:
-            d.text((left_margin, current_y), line, fill=text_color, font=main_font)
-            current_y += d.textbbox((0, 0), line, font=main_font)[3] + 10  # 10px line spacing within group
-        current_y += 30  # 30px extra spacing between groups
-
-    # Add the date and time at the bottom (centered)
-    now = datetime.now()
-    date_time_text = now.strftime('%d de %B de %Y - %H:%M')
-    date_text_width = d.textbbox((0, 0), date_time_text, font=date_font)[2]
-    date_x = (image_size[0] - date_text_width) / 2
-    date_y = image_size[1] - date_font_size - 10  # 10 pixels from the bottom
-    d.text((date_x, date_y), date_time_text, fill=date_color, font=date_font)
-
-    # Save the image
+    # Draw title
+    title = f"{border_type}"
+    draw.text((PADDING, current_y), title, COLORS['title'], font=title_font)
+    current_y += 80  # Reduced spacing after title
+    
+    # Prepare data based on border type
+    prefix = "San Ysidro" if border_type == "San Ysidro" else "Otay"
+    
+    # Draw Vehicles section
+    draw.text((PADDING, current_y), "Vehicles:", COLORS['category'], font=category_font)
+    current_y += 60
+    
+    vehicle_data = [
+        ("Regular", wait_times[f"{prefix} All Traffic"]),
+        ("Ready Lane", wait_times[f"{prefix} Ready Lane"]),
+        ("SENTRI", wait_times[f"{prefix} Sentri"])
+    ]
+    
+    for label, time in vehicle_data:
+        text = f"{label}: "
+        text_width = draw.textlength(text, font=main_font)
+        draw.text((PADDING, current_y), text, COLORS['text'], font=main_font)
+        
+        time_text = f"{time} min"
+        time_color = COLORS['long_wait'] if time > 45 else COLORS['text']
+        draw.text((PADDING + text_width, current_y), time_text, time_color, font=time_font)
+        current_y += LINE_HEIGHT
+    
+    current_y += 20  # Space between sections
+    
+    # Draw Pedestrians section
+    draw.text((PADDING, current_y), "Pedestrians:", COLORS['category'], font=category_font)
+    current_y += 60
+    
+    pedestrian_data = [
+        ("Regular", wait_times[f"{prefix} Pedestrian"]),
+        ("Ready Lane", wait_times[f"{prefix} Pedestrian Ready"])
+    ]
+    
+    for label, time in pedestrian_data:
+        text = f"{label}: "
+        text_width = draw.textlength(text, font=main_font)
+        draw.text((PADDING, current_y), text, COLORS['text'], font=main_font)
+        
+        time_text = f"{time} min"
+        time_color = COLORS['long_wait'] if time > 30 else COLORS['text']
+        draw.text((PADDING + text_width, current_y), time_text, time_color, font=time_font)
+        current_y += LINE_HEIGHT
+    
+    # Draw date at bottom
+    date_text = datetime.now().strftime('%B %d, %Y - %H:%M')
+    text_width = draw.textlength(date_text, font=date_font)
+    draw.text(
+        (IMAGE_SIZE[0] - PADDING - text_width, IMAGE_SIZE[1] - PADDING - 30),
+        date_text,
+        COLORS['date'],
+        font=date_font
+    )
+    
+    # Save image
     img.save(filename)
     print(f"Image saved as {filename}")
 
-# Example usage remains the same
-if __name__ == '__main__':
-    sample_text = """SAN YSIDRO:
-All Traffic >>
-Vehicles: 1:40
-Pedestrians: 0:10
-Ready Lanes >>
-Vehicles: 1:00
-Pedestrians: No Delay
-Sentri >>
-Vehicles: 0:10"""
+def create_both_border_images(wait_times):
+    """Create both San Ysidro and Otay images"""
+    create_border_image(wait_times, "San Ysidro", "san_ysidro_wait_times.png")
+    create_border_image(wait_times, "Otay Mesa", "otay_wait_times.png")
 
-    create_image_with_text(sample_text, 'improved_wait_times.png')
-    print('Image created successfully!')
+def main():
+    sample_wait_times = {
+        "San Ysidro All Traffic": 75,
+        "San Ysidro Ready Lane": 75,
+        "San Ysidro Sentri": 15,
+        "San Ysidro Pedestrian": 15,
+        "San Ysidro Pedestrian Ready": 1,
+        "Otay All Traffic": 45,
+        "Otay Ready Lane": 45,
+        "Otay Sentri": 10,
+        "Otay Pedestrian": 30,
+        "Otay Pedestrian Ready": 0
+    }
+    
+    create_both_border_images(sample_wait_times)
+
+if __name__ == "__main__":
+    main()

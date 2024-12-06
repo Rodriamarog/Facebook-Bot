@@ -1,0 +1,5 @@
+Dec 5:
+We have to make the post_to_facebook.py script post the actual values of the wait times and not the dummy values.
+We have to create the single product website and setup stripe or mercado pago or some shit to accept payments.
+We have to figure out how to comment on the post with a link to the website so they can purchase the shit.
+Or for now, maybe a link to buymeacoffe or something?
