@@ -13,3 +13,12 @@ package/
 deployment_package.zip
 env/
 deployment_package/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+.env

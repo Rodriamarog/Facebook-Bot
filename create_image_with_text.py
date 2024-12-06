@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
+import os
 
 def create_image_with_text(text, filename='output.png', image_size=(800, 800), bg_color=(0, 0, 0), text_color=(222, 213, 49), title_color=(255, 255, 0), font_size=60, title_font_size=70, date_font_size=45, date_color=(255, 255, 255)):
     # Create a new blank image
@@ -7,10 +8,11 @@ def create_image_with_text(text, filename='output.png', image_size=(800, 800), b
     d = ImageDraw.Draw(img)
 
     # Define fonts
+    font_path = os.path.join(os.path.dirname(__file__), 'Jersey15-Regular.ttf')
     try:
-        main_font = ImageFont.truetype("/var/task/Jersey15-Regular.ttf", font_size)
-        title_font = ImageFont.truetype("/var/task/Jersey15-Regular.ttf", title_font_size)
-        date_font = ImageFont.truetype("/var/task/Jersey15-Regular.ttf", date_font_size)
+        main_font = ImageFont.truetype(font_path, font_size)
+        title_font = ImageFont.truetype(font_path, title_font_size)
+        date_font = ImageFont.truetype(font_path, date_font_size)
     except IOError:
         print("Font not found, using default font.")
         main_font = ImageFont.load_default()

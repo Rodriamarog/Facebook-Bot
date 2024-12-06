@@ -5,12 +5,14 @@ import facebook
 from datetime import datetime
 
 # Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
 
 def post_to_facebook_page(image_path, wait_time_data):
     # Access variables
     access_token = os.environ.get('ACCESS_TOKEN')
     page_id = os.environ.get('PAGE_ID')
-    graph = facebook.GraphAPI(access_token)
+    graph = facebook.GraphAPI(access_token=access_token, version="3.0")
 
     # Determine the border crossing point from the image filename
     if "1" in image_path:
@@ -32,12 +34,19 @@ def post_to_facebook_page(image_path, wait_time_data):
 
     # Post image with message and location to Facebook Page
     with open(image_path, 'rb') as image_file:
-        post_id = graph.put_photo(
-            image=image_file,
-            message=message,
-            album_path=f"{page_id}/photos",
-            place=place_id
-        )
+        try:
+            post_id = graph.put_photo(
+                image=image_file,
+                message=message,
+                album_path=f"{page_id}/photos",
+                place=place_id
+            )
+            return post_id['post_id']
+        except facebook.GraphAPIError as e:
+            print(f"Facebook API Error: {e}")
+            print(f"Error Type: {type(e)}")
+            print(f"Error Args: {e.args}")
+            return None
 
     if post_id:
         print(f"Successfully posted image for {crossing_point} to Facebook Page.")
@@ -47,7 +56,7 @@ def post_to_facebook_page(image_path, wait_time_data):
             print(f"Successfully deleted {image_path}")
         except OSError as e:
             print(f"Error deleting {image_path}: {e}")
-        return post_id
+        return post_id.get('post_id')
     else:
         print(f"Failed to post image for {crossing_point} to Facebook Page.")
         return None
