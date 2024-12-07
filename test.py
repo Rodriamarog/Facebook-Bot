@@ -6,6 +6,7 @@ from typing import Dict
 import logging
 from create_image_with_text import create_border_image
 from scrape_wait_times import get_wait_times
+import pytz  # Add this import at the top
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -32,9 +33,12 @@ def post_to_facebook_page(image_path: str, border_type: str) -> str:
         "San Ysidro": "115318908567372",
         "Otay Mesa": "172775682873255"
     }
+
     
-    # Create message
-    current_time = datetime.now().strftime("%H:%M")
+    
+    # Create message with Tijuana timezone
+    tijuana_tz = pytz.timezone('America/Tijuana')
+    current_time = datetime.now(tijuana_tz).strftime("%H:%M")
     
     hashtags = {
         "San Ysidro": "#sanysidro #tijuana #garita #comoestalalinea #sentri #readylane",

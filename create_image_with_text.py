@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
+import pytz
 import os
 import requests
 
@@ -93,10 +94,16 @@ def create_border_image(wait_times, border_type, filename=None):
     draw.text((PADDING, current_y), "Pedestrians:", COLORS['category'], font=category_font)
     current_y += 60
     
-    pedestrian_data = [
-        ("Regular", wait_times[f"{prefix} Pedestrian"]),
-        ("Ready Lane", wait_times[f"{prefix} Pedestrian Ready"])
-    ]
+    # Modified pedestrian data section to handle different borders
+    if border_type == "San Ysidro":
+        pedestrian_data = [
+            ("Regular", wait_times[f"{prefix} Pedestrian"]),
+            ("Ready Lane", wait_times[f"{prefix} Pedestrian Ready"])
+        ]
+    else:  # Otay Mesa
+        pedestrian_data = [
+            ("Regular", wait_times[f"{prefix} Pedestrian"])
+        ]
     
     for label, time in pedestrian_data:
         text = f"{label}: "
@@ -109,7 +116,9 @@ def create_border_image(wait_times, border_type, filename=None):
         current_y += LINE_HEIGHT
     
     # Draw date at bottom
-    date_text = datetime.now().strftime('%B %d, %Y - %H:%M')
+    tijuana_tz = pytz.timezone('America/Tijuana')
+    current_time = datetime.now(tijuana_tz)
+    date_text = current_time.strftime('%B %d, %Y - %H:%M')
     text_width = draw.textlength(date_text, font=date_font)
     draw.text(
         (IMAGE_SIZE[0] - PADDING - text_width, IMAGE_SIZE[1] - PADDING - 30),
